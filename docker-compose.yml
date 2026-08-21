@@ -1,0 +1,109 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: kronyx_postgres
+    environment:
+      POSTGRES_USER: kronyx
+      POSTGRES_PASSWORD: kronyx_dev_password
+      POSTGRES_DB: kronyx
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kronyx"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: kronyx_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build: ./backend
+    container_name: kronyx_backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://kronyx:kronyx_dev_password@postgres:5432/kronyx
+      - SYNC_DATABASE_URL=postgresql://kronyx:kronyx_dev_password@postgres:5432/kronyx
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  scraper:
+    build: ./scraper
+    container_name: kronyx_scraper
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://kronyx:kronyx_dev_password@postgres:5432/kronyx
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: celery -A scraper.celery_app worker -Q scraping -l info -c 3
+
+  ai_pipeline:
+    build: ./ai_pipeline
+    container_name: kronyx_ai
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://kronyx:kronyx_dev_password@postgres:5432/kronyx
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: celery -A ai_pipeline.celery_app worker -Q ai_analysis -l info -c 2
+
+  notifications:
+    build: ./notifications
+    container_name: kronyx_notifications
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://kronyx:kronyx_dev_password@postgres:5432/kronyx
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: celery -A notifications.celery_app worker -B -Q notifications -l info
+
+  frontend:
+    build: ./frontend
+    container_name: kronyx_frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  redis_data:

@@ -1,0 +1,26 @@
+from celery import Celery
+from celery.schedules import crontab
+from scraper.config import settings
+
+celery_app = Celery("kronyx_scraper")
+celery_app.conf.update(
+    broker_url=settings.REDIS_URL,
+    result_backend=settings.REDIS_URL,
+    task_serializer="json",
+    result_serializer="json",
+    accept_content=["json"],
+    timezone="UTC",
+    enable_utc=True,
+    worker_prefetch_multiplier=1,
+    task_acks_late=True,
+    beat_schedule={
+        # Scraping quotidien à 2h UTC
+        "scrape-all-pages-daily": {
+            "task": "kronyx.scrape_all_pages",
+            "schedule": crontab(hour=2, minute=0),
+            "options": {"queue": "scraping"},
+        },
+    },
+)
+
+celery_app.autodiscover_tasks(["scraper.tasks"])

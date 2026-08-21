@@ -1,0 +1,11 @@
+openai==1.57.0
+langgraph==0.2.59
+langchain==0.3.13
+langchain-openai==0.2.13
+celery[redis]==5.4.0
+redis==5.2.1
+sqlalchemy[asyncio]==2.0.36
+asyncpg==0.30.0
+pydantic==2.10.3
+pydantic-settings==2.6.1
+python-dotenv==1.0.1

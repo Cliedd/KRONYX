@@ -1,0 +1,111 @@
+{% extends "email_base.html" %}
+
+{% block title %}Veille du {{ report_date }} — {{ total_changes }} changement{{ 's' if total_changes != 1 else '' }}{% endblock %}
+
+{% block header_date %}Rapport quotidien · {{ report_date }}{% endblock %}
+
+{% block content %}
+<!-- Stats summary -->
+<div class="stats-row">
+  <div class="stat-box">
+    <div class="stat-number">{{ total_changes }}</div>
+    <div class="stat-label">Changements</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-number {% if high_impact_count > 0 %}highlight{% endif %}">{{ high_impact_count }}</div>
+    <div class="stat-label">Impact élevé</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-number">{{ competitors_affected }}</div>
+    <div class="stat-label">Concurrent{{ 's' if competitors_affected != 1 else '' }}</div>
+  </div>
+</div>
+
+{% if total_changes == 0 %}
+<!-- No changes state -->
+<div class="no-changes">
+  ✅ Aucun changement significatif détecté aujourd'hui.
+  <span class="no-changes-sub">Vos concurrents n'ont pas mis à jour leurs pages surveillées.</span>
+</div>
+
+{% else %}
+<!-- Changes list -->
+<p class="section-title">Changements détectés</p>
+
+{% for competitor_name, changes in changes_by_competitor.items() %}
+<div class="competitor-block">
+  <div class="competitor-name">
+    🏢 {{ competitor_name }}
+    <span class="competitor-count">
+      — {{ changes|length }} changement{{ 's' if changes|length > 1 else '' }}
+    </span>
+  </div>
+
+  {% for change in changes %}
+  <div class="change-item {{ change.impact_level }}">
+    <!-- Badges -->
+    <div class="badges">
+      {% if change.category %}
+      <span class="badge badge-category">{{ change.category }}</span>
+      {% endif %}
+
+      {% if change.impact_level == 'high' %}
+      <span class="badge badge-high">🔴 Impact élevé</span>
+      {% elif change.impact_level == 'medium' %}
+      <span class="badge badge-medium">🟡 Impact moyen</span>
+      {% else %}
+      <span class="badge badge-low">🟢 Impact faible</span>
+      {% endif %}
+
+      {% if change.page_type %}
+      <span class="badge badge-type">{{ change.page_type }}</span>
+      {% endif %}
+    </div>
+
+    <!-- Summary -->
+    <div class="change-summary">
+      {{ change.summary or 'Un changement a été détecté sur cette page.' }}
+    </div>
+
+    <!-- Key changes bullets -->
+    {% if change.key_changes %}
+    <ul class="key-changes">
+      {% for kc in change.key_changes[:3] %}
+      <li>{{ kc }}</li>
+      {% endfor %}
+      {% if change.key_changes|length > 3 %}
+      <li style="color: #9ca3af; font-style: italic;">
+        + {{ change.key_changes|length - 3 }} autre{{ 's' if change.key_changes|length - 3 > 1 else '' }}…
+      </li>
+      {% endif %}
+    </ul>
+    {% endif %}
+
+    <!-- Strategic recommendation -->
+    {% if change.strategic_recommendation %}
+    <div class="change-recommendation">
+      💡 <strong>Recommandation :</strong> {{ change.strategic_recommendation }}
+    </div>
+    {% endif %}
+
+    <!-- Source link -->
+    <a href="{{ change.page_url }}" class="change-link" target="_blank" rel="noopener noreferrer">
+      Voir la page source →
+    </a>
+  </div>
+  {% endfor %}
+</div>
+
+{% if not loop.last %}
+<hr class="divider">
+{% endif %}
+{% endfor %}
+{% endif %}
+
+<!-- CTA -->
+<div class="cta-wrapper">
+  <a href="{{ frontend_url }}" class="cta-button">
+    Voir le dashboard complet →
+  </a>
+</div>
+{% endblock %}
