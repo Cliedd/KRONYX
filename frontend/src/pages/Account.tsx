@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { usersApi, billingApi } from '@/services/api';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/button';
@@ -46,6 +47,9 @@ const PLAN_CONFIG: Record<string, { label: string; color: string; features: stri
 export function Account() {
   const qc = useQueryClient();
   const { setUser } = useAuthStore();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [upgradeLoading, setUpgradeLoading] = useState(false);
+  const [portalLoading, setPortalLoading] = useState(false);
 
   const { data, isLoading } = useQuery<{ data: UserType }>({
     queryKey: ['me'],
@@ -65,6 +69,40 @@ export function Account() {
       setCompanyName(user.company_name ?? '');
     }
   }, [user]);
+
+  // Handle Stripe redirect params
+  useEffect(() => {
+    if (searchParams.get('success')) {
+      toast({ title: 'Paiement réussi !', description: 'Votre plan Pro est maintenant actif.' });
+      qc.invalidateQueries({ queryKey: ['me'] });
+      setSearchParams({});
+    } else if (searchParams.get('canceled')) {
+      toast({ variant: 'destructive', title: 'Paiement annulé', description: 'Votre abonnement n\'a pas été modifié.' });
+      setSearchParams({});
+    }
+  }, [searchParams]);
+
+  const handleUpgrade = async () => {
+    setUpgradeLoading(true);
+    try {
+      const res = await billingApi.checkout();
+      window.location.href = res.data.checkout_url;
+    } catch {
+      toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de créer la session de paiement.' });
+      setUpgradeLoading(false);
+    }
+  };
+
+  const handlePortal = async () => {
+    setPortalLoading(true);
+    try {
+      const res = await billingApi.portal();
+      window.location.href = res.data.portal_url;
+    } catch {
+      toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible d\'accéder au portail.' });
+      setPortalLoading(false);
+    }
+  };
 
   const updateMutation = useMutation({
     mutationFn: (data: Parameters<typeof usersApi.updateMe>[0]) => usersApi.updateMe(data),
@@ -203,12 +241,20 @@ export function Account() {
               </li>
             ))}
           </ul>
-          {plan !== 'enterprise' && (
-            <Button variant="outline" size="sm" onClick={handleUpgrade}>
-              <Zap className="h-4 w-4 mr-2" />
-              Passer à {plan === 'starter' ? 'Pro' : 'Enterprise'}
-            </Button>
-          )}
+          <div className="flex gap-2 flex-wrap">
+            {plan === 'starter' && (
+              <Button size="sm" onClick={handleUpgrade} disabled={upgradeLoading}>
+                {upgradeLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Zap className="h-4 w-4 mr-2" />}
+                Passer à Pro — 49€/mois
+              </Button>
+            )}
+            {plan !== 'starter' && (
+              <Button variant="outline" size="sm" onClick={handlePortal} disabled={portalLoading}>
+                {portalLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CreditCard className="h-4 w-4 mr-2" />}
+                Gérer mon abonnement
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
 

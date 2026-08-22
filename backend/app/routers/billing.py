@@ -39,6 +39,7 @@ async def create_checkout_session(
 
     session = s.checkout.Session.create(
         customer=current_user.stripe_customer_id,
+        client_reference_id=str(current_user.id),
         payment_method_types=["card"],
         line_items=[{"price": settings.STRIPE_PRICE_PRO_ID, "quantity": 1}],
         mode="subscription",
@@ -77,7 +78,20 @@ async def stripe_webhook(request: Request, db: AsyncSession = Depends(get_db)):
     except Exception:
         raise HTTPException(status_code=400, detail="Webhook invalide")
 
-    if event["type"] == "customer.subscription.updated":
+    if event["type"] == "checkout.session.completed":
+        session = event["data"]["object"]
+        user_id = session.get("client_reference_id")
+        customer_id = session.get("customer")
+        if user_id:
+            result = await db.execute(select(User).where(User.id == user_id))
+            user = result.scalar_one_or_none()
+            if user:
+                user.plan = "pro"
+                if customer_id and not user.stripe_customer_id:
+                    user.stripe_customer_id = customer_id
+                await db.flush()
+
+    elif event["type"] == "customer.subscription.updated":
         sub = event["data"]["object"]
         customer_id = sub["customer"]
         status_val = sub["status"]
