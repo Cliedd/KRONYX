@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.routers import auth, users, competitors, pages, changes, reports, dashboard
+from app.routers import auth, users, competitors, pages, changes, reports, dashboard, billing
 
 app = FastAPI(
     title="Kronyx API",
@@ -26,6 +26,7 @@ app.include_router(pages.router, prefix="/api/v1", tags=["Pages"])
 app.include_router(changes.router, prefix="/api/v1/changes", tags=["Changements"])
 app.include_router(reports.router, prefix="/api/v1/reports", tags=["Rapports"])
 app.include_router(dashboard.router, prefix="/api/v1/dashboard", tags=["Dashboard"])
+app.include_router(billing.router, prefix="/api/v1/billing", tags=["Facturation"])
 
 
 @app.get("/health", tags=["Santé"])

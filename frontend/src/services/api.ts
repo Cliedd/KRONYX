@@ -1,19 +1,15 @@
 import axios from 'axios';
+import type { User } from '../types';
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+
+export const BACKEND_URL =
+  import.meta.env.VITE_API_URL?.replace('/api/v1', '') || 'http://localhost:8000';
 
 export const api = axios.create({
   baseURL: BASE_URL,
   headers: { 'Content-Type': 'application/json' },
-});
-
-// Intercepteur: ajouter le token automatiquement
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('kronyx_token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
+  withCredentials: true,
 });
 
 // Intercepteur: gérer les 401
@@ -21,7 +17,6 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('kronyx_token');
       window.location.href = '/login';
     }
     return Promise.reject(error);
@@ -31,17 +26,18 @@ api.interceptors.response.use(
 // Auth
 export const authApi = {
   register: (data: { email: string; password: string; company_name?: string; timezone?: string }) =>
-    api.post('/auth/register', data),
+    api.post<User>('/auth/register', data),
   login: (data: { email: string; password: string }) =>
-    api.post('/auth/login', data),
-  me: () => api.get('/auth/me'),
+    api.post<User>('/auth/login', data),
+  me: () => api.get<User>('/auth/me'),
+  logout: () => api.post<void>('/auth/logout'),
 };
 
 // Users
 export const usersApi = {
-  getMe: () => api.get('/users/me'),
+  getMe: () => api.get<User>('/users/me'),
   updateMe: (data: Partial<{ company_name: string; timezone: string; notification_emails: string[]; synthesis_tone: string }>) =>
-    api.put('/users/me', data),
+    api.put<User>('/users/me', data),
   changePassword: (data: { current_password: string; new_password: string }) =>
     api.put('/users/me/password', data),
 };
@@ -90,4 +86,10 @@ export const reportsApi = {
 export const dashboardApi = {
   stats: () => api.get('/dashboard/stats'),
   recentChanges: () => api.get('/dashboard/recent-changes'),
+};
+
+// Billing
+export const billingApi = {
+  checkout: () => api.post<{ checkout_url: string }>('/billing/checkout'),
+  portal: () => api.post<{ portal_url: string }>('/billing/portal'),
 };

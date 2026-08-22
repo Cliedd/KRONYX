@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { usersApi } from '@/services/api';
+import { usersApi, billingApi } from '@/services/api';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -114,6 +114,15 @@ export function Account() {
   const plan = user?.plan ?? 'starter';
   const planConfig = PLAN_CONFIG[plan] ?? PLAN_CONFIG.starter;
 
+  const handleUpgrade = async () => {
+    try {
+      const res = await billingApi.checkout();
+      window.location.href = res.data.checkout_url;
+    } catch {
+      toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de créer la session de paiement' });
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-4 max-w-2xl">
@@ -195,7 +204,7 @@ export function Account() {
             ))}
           </ul>
           {plan !== 'enterprise' && (
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={handleUpgrade}>
               <Zap className="h-4 w-4 mr-2" />
               Passer à {plan === 'starter' ? 'Pro' : 'Enterprise'}
             </Button>

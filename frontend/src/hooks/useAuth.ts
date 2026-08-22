@@ -13,6 +13,6 @@ export function useCurrentUser() {
       return response.data;
     },
     enabled: isAuthenticated,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 }

@@ -26,6 +26,13 @@ class Settings(BaseSettings):
 
     SEMANTIC_SIMILARITY_THRESHOLD: float = 0.85
 
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+    GOOGLE_REDIRECT_URI: str = "https://backend-production-4269b.up.railway.app/api/v1/auth/google/callback"
+    STRIPE_SECRET_KEY: str = ""
+    STRIPE_WEBHOOK_SECRET: str = ""
+    STRIPE_PRICE_PRO_ID: str = ""
+
 
 @lru_cache()
 def get_settings():

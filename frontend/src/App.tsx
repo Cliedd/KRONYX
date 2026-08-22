@@ -12,6 +12,10 @@ import { History } from './pages/History';
 import { Reports } from './pages/Reports';
 import { Settings } from './pages/Settings';
 import { Account } from './pages/Account';
+import { Loader2 } from 'lucide-react';
+import { useEffect } from 'react';
+import { authApi } from '@/services/api';
+import { useAuthStore } from '@/store/authStore';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -22,31 +26,55 @@ const queryClient = new QueryClient({
   },
 });
 
+function AuthInitializer({ children }: { children: React.ReactNode }) {
+  const { setUser, setInitialized, isInitialized } = useAuthStore();
+
+  useEffect(() => {
+    authApi
+      .me()
+      .then((res) => setUser(res.data))
+      .catch(() => {})
+      .finally(() => setInitialized());
+  }, []);
+
+  if (!isInitialized) {
+    return (
+      <div className="min-h-screen bg-[#0A1628] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Dashboard />} />
-            <Route path="competitors" element={<Competitors />} />
-            <Route path="competitors/:id" element={<CompetitorDetail />} />
-            <Route path="history" element={<History />} />
-            <Route path="reports" element={<Reports />} />
-            <Route path="settings" element={<Settings />} />
-            <Route path="account" element={<Account />} />
-          </Route>
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <AuthInitializer>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Dashboard />} />
+              <Route path="competitors" element={<Competitors />} />
+              <Route path="competitors/:id" element={<CompetitorDetail />} />
+              <Route path="history" element={<History />} />
+              <Route path="reports" element={<Reports />} />
+              <Route path="settings" element={<Settings />} />
+              <Route path="account" element={<Account />} />
+            </Route>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </AuthInitializer>
       </BrowserRouter>
       <Toaster />
     </QueryClientProvider>
