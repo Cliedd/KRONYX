@@ -14,11 +14,11 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 
 const navItems = [
-  { to: '/', icon: LayoutDashboard, label: 'Dashboard', end: true },
-  { to: '/competitors', icon: Building2, label: 'Concurrents' },
-  { to: '/history', icon: History, label: 'Historique' },
-  { to: '/reports', icon: FileText, label: 'Rapports' },
-  { to: '/settings', icon: Settings, label: 'Paramètres' },
+  { to: '/app', icon: LayoutDashboard, label: 'Dashboard', end: true },
+  { to: '/app/competitors', icon: Building2, label: 'Concurrents' },
+  { to: '/app/history', icon: History, label: 'Historique' },
+  { to: '/app/reports', icon: FileText, label: 'Rapports' },
+  { to: '/app/settings', icon: Settings, label: 'Paramètres' },
 ];
 
 export function Sidebar() {
@@ -70,7 +70,7 @@ export function Sidebar() {
       {/* Bottom user section */}
       <div className="p-3 border-t border-border">
         <NavLink
-          to="/account"
+          to="/app/account"
           className={({ isActive }) =>
             cn(
               'flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors mb-1',

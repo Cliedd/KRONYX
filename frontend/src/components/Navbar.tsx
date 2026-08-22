@@ -13,12 +13,12 @@ import { useAuthStore } from '@/store/authStore';
 import { LogOut, User } from 'lucide-react';
 
 const pageTitles: Record<string, string> = {
-  '/': 'Dashboard',
-  '/competitors': 'Concurrents',
-  '/history': 'Historique des changements',
-  '/reports': 'Rapports',
-  '/settings': 'Paramètres',
-  '/account': 'Mon compte',
+  '/app': 'Dashboard',
+  '/app/competitors': 'Concurrents',
+  '/app/history': 'Historique des changements',
+  '/app/reports': 'Rapports',
+  '/app/settings': 'Paramètres',
+  '/app/account': 'Mon compte',
 };
 
 export function Navbar() {
@@ -29,7 +29,7 @@ export function Navbar() {
   const getTitle = () => {
     const exact = pageTitles[location.pathname];
     if (exact) return exact;
-    if (location.pathname.startsWith('/competitors/')) return 'Détail concurrent';
+    if (location.pathname.startsWith('/app/competitors/')) return 'Détail concurrent';
     return 'Kronyx';
   };
 
@@ -65,7 +65,7 @@ export function Navbar() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => navigate('/account')}>
+            <DropdownMenuItem onClick={() => navigate('/app/account')}>
               <User className="mr-2 h-4 w-4" />
               Mon compte
             </DropdownMenuItem>

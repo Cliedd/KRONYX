@@ -50,7 +50,7 @@ export function Register() {
       setUser(res.data);
 
       toast({ title: 'Compte créé !', description: 'Bienvenue sur Kronyx.' });
-      navigate('/');
+      navigate('/app');
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ??

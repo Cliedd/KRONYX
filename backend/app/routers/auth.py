@@ -186,7 +186,7 @@ async def google_callback(
 
     jwt_token = create_access_token({"sub": str(user.id)})
 
-    redirect_resp = RedirectResponse(url=f"{settings.FRONTEND_URL}/", status_code=302)
+    redirect_resp = RedirectResponse(url=f"{settings.FRONTEND_URL}/app", status_code=302)
     _set_auth_cookie(redirect_resp, jwt_token)
     redirect_resp.delete_cookie("oauth_state")
     return redirect_resp

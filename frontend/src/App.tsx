@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 import { Layout } from './components/Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { Landing } from './pages/Landing';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
@@ -30,9 +31,11 @@ function AuthInitializer({ children }: { children: React.ReactNode }) {
   const { setUser, setInitialized, isInitialized } = useAuthStore();
 
   useEffect(() => {
-    authApi
-      .me()
-      .then((res) => setUser(res.data))
+    const timeout = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('timeout')), 4000)
+    );
+    Promise.race([authApi.me(), timeout])
+      .then((res) => setUser((res as { data: Parameters<typeof setUser>[0] }).data))
       .catch(() => {})
       .finally(() => setInitialized());
   }, []);
@@ -54,10 +57,11 @@ function App() {
       <BrowserRouter>
         <AuthInitializer>
           <Routes>
+            <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route
-              path="/"
+              path="/app"
               element={
                 <ProtectedRoute>
                   <Layout />

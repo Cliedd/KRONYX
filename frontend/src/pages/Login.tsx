@@ -37,7 +37,7 @@ export function Login() {
     try {
       const res = await authApi.login({ email, password });
       setUser(res.data);
-      navigate('/');
+      navigate('/app');
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ??
