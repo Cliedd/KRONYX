@@ -152,15 +152,6 @@ export function Account() {
   const plan = user?.plan ?? 'starter';
   const planConfig = PLAN_CONFIG[plan] ?? PLAN_CONFIG.starter;
 
-  const handleUpgrade = async () => {
-    try {
-      const res = await billingApi.checkout();
-      window.location.href = res.data.checkout_url;
-    } catch {
-      toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de créer la session de paiement' });
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="space-y-4 max-w-2xl">
