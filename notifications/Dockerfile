@@ -12,4 +12,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-CMD ["celery", "-A", "notifications.celery_app", "worker", "-B", "-Q", "notifications", "-l", "info"]
+RUN chmod +x start.sh
+CMD ["sh", "start.sh"]

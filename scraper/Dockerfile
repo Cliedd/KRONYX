@@ -12,4 +12,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-CMD ["celery", "-A", "scraper.celery_app", "worker", "-Q", "scraping", "-l", "info", "-c", "3"]
+RUN chmod +x start.sh
+CMD ["sh", "start.sh"]
